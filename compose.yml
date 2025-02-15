@@ -1,6 +1,8 @@
 x-airflow-common:
   &airflow-common
   image: ${AIRFLOW_IMAGE_NAME:-extended_airflow:latest}
+  networks:
+    - confluent
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -56,6 +58,8 @@ services:
     restart: always
     ports:
       - "5432:5432"
+    networks:
+      - confluent
   
   pgadmin:
     container_name: pgadmin4_container
@@ -66,7 +70,8 @@ services:
       PGADMIN_DEFAULT_PASSWORD: root
     ports:
       - "5050:80"
-
+    networks:
+      - confluent
   redis:
     image: redis:7.2-bookworm
     expose:
@@ -78,6 +83,8 @@ services:
       retries: 50
       start_period: 30s
     restart: always
+    networks:
+      - confluent
 
   airflow-webserver:
     <<: *airflow-common
@@ -239,6 +246,7 @@ services:
       airflow-init:
         condition: service_completed_successfully
   
+  # Kafka Related Services (Zookeeper, Broker, Schema Registry, Control Center)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     hostname: zookeeper
@@ -271,7 +279,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       #KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092, PLAINTEXT_HOST://localhost:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
@@ -343,6 +351,7 @@ services:
       timeout: 10s
       retries: 5
   
+  # Cassandra DB
   cassandra_db:
     image: cassandra:latest
     container_name: cassandra
@@ -362,3 +371,4 @@ volumes:
 
 networks:
   confluent:
+    driver: bridge
