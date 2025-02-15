@@ -19,4 +19,6 @@ fi
 
 $(command -v airflow) db upgrade
 
+python -c "import sys, six; sys.modules['kafka.vendor.six.moves'] = six.moves if sys.version_info >= (3, 12, 0) else None"
+
 exec airflow webserver
