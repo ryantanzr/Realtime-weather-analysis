@@ -1,0 +1,1 @@
+docker build . --tag extended_airflow
