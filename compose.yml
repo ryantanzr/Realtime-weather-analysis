@@ -48,6 +48,8 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
+      POSTGRES_SHARED_BUFFERS: 256MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 512MB
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
     healthcheck:
@@ -76,6 +78,7 @@ services:
     image: redis:7.2-bookworm
     expose:
       - 6379
+    command: ["redis-server", "--appendonly", "no", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"] 
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
